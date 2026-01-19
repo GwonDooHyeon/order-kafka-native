@@ -1,0 +1,5 @@
+plugins {
+    id 'java-library' // 순수 Java 라이브러리 모듈 - Spring Boot 의존성 없음
+}
+
+description = 'common'

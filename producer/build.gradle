@@ -1,0 +1,14 @@
+description = 'producer'
+
+dependencies {
+    implementation(project(":common"))
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Source: https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
+    implementation("org.apache.kafka:kafka-clients:3.9.1")
+}
+
+apply {
+    plugin('org.springframework.boot')
+}

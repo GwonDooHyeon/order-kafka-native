@@ -1,0 +1,5 @@
+rootProject.name = 'order-native-kafka'
+
+include("producer")
+include("consumer")
+include("common")

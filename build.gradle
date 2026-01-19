@@ -1,0 +1,48 @@
+plugins {
+    id 'org.springframework.boot'        version '3.5.9' apply(false)   // bootJar, bootRun 실행 역할
+    id 'io.spring.dependency-management' version '1.1.7' apply(false)   // 의존성 버전 자동 관리
+}
+
+description = 'order-native-kafka'
+
+allprojects {
+    group = 'org.example'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply {
+        plugin('java')
+        plugin('io.spring.dependency-management')
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        // Lombok
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        // Test > runtime에 포함되지 않아 배포 Jar 크기에 영향 없음.
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}
