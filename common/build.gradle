@@ -13,9 +13,9 @@ dependencyManagement {
 
 dependencies {
     // Logging API
-    api 'org.slf4j:slf4j-api'
+    implementation("org.slf4j:slf4j-api")
 
     // Jackson 2.x (JSON 직렬화) - Spring Boot BOM이 버전 관리
-    api 'com.fasterxml.jackson.core:jackson-databind'
-    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    api("com.fasterxml.jackson.core:jackson-databind")
+    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
