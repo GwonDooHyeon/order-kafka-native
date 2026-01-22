@@ -34,7 +34,7 @@ public class KeyPartitionProducer {
 
         for (int seq = 0; seq < 10; seq++) {
             String value = topic + " " + seq;
-            ProducerRecord<String, String> record = new ProducerRecord<>(topic, value);
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, "ㅏㅏ", value);
 
             producer.send(record, (metadata, exception) -> {
                 if (exception == null) {
