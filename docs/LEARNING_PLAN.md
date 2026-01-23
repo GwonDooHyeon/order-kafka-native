@@ -420,20 +420,20 @@ Q2. 메시지 처리 중 에러 발생 시, 커밋을 안 하면?
 ### 🤔 예상 퀴즈
 ```
 Q1. Consumer 1이 오프셋 10까지 읽다가 Consumer 2가 같은 그룹에
-    조인하면 rebalancing이 발생한다. 이 시점에?
-    a) onPartitionsRevoked()가 호출되고 오프셋 저장
-    b) 바로 메시지 처리 계속함
-    c) Consumer가 일시 정지됨
+    조인하면 Rebalancing이 발생한다. 호출되는 메서드 순서는?
+    a) onPartitionsRevoked() → Rebalancing 진행 → onPartitionsAssigned()
+    b) onPartitionsAssigned() → Rebalancing 진행 → onPartitionsRevoked()
+    c) Rebalancing 후 두 메서드 동시에 호출됨
 
-Q2. onPartitionsAssigned()에서 해야 할 작업은?
-    a) 새로운 파티션에서 읽을 시작 오프셋 설정
-    b) 이전 상태 복구 (예: 메모리 캐시)
+Q2. onPartitionsAssigned()에서 해야 할 작업으로 가장 적절한 것은?
+    a) 새로운 파티션에서 읽을 시작 오프셋 설정 (자동으로 처리됨)
+    b) 이전 상태 복구 (예: 메모리 캐시 재구성)
+    c) 새로운 파티션 정보 로깅
+
+Q3. Consumer 2가 종료되고 Rebalancing이 일어나면?
+    a) Consumer 1이 Consumer 2의 파티션을 할당받음
+    b) 마지막 커밋된 오프셋부터 처리 재개됨
     c) a, b 모두
-
-Q3. Consumer 2가 나가면?
-    a) Consumer 1이 모든 파티션을 다시 받음 (rebalancing)
-    b) 메시지 유실 가능성 있음
-    c) a, b 모두 가능
 ```
 
 ### 💻 구현할 파일
@@ -515,16 +515,17 @@ Q1. fetch.min.bytes=1KB, 실제 데이터 100bytes 들어옴
     b) 100ms 후 100bytes 반환
     c) 1KB 도달할 때까지 대기
 
-Q2. max.poll.records=100인데 poll()에서 50개만 처리하고
-    2초 후 다시 poll()하면?
-    a) 정상 (나머지 50개 버짐)
-    b) 에러 (Rebalancing 발생)
-    c) 50개 메시지 반환
+Q2. max.poll.interval.ms=5000(5초)인데 poll() 후 메시지를
+    6초 동안 처리하면?
+    a) 정상 (설정이 충분히 여유있음)
+    b) Consumer가 Dead로 인식되어 Rebalancing 발생
+    c) 처리가 완료될 때까지 대기
 
-Q3. 하트비트 간격 < 메시지 처리 시간이면?
-    a) 정상 동작
-    b) Consumer가 Dead로 인식 (Rebalancing)
-    c) 자동으로 조정됨
+Q3. heartbeat.interval.ms=3000인데, Consumer 스레드가
+    GC로 인해 5초간 일시 정지되면?
+    a) 하트비트가 백그라운드에서 계속 전송됨 (정상)
+    b) 하트비트가 전송되지 않아 브로커가 Dead 인식 가능
+    c) 자동으로 복구됨
 ```
 
 ### 💻 구현할 파일
