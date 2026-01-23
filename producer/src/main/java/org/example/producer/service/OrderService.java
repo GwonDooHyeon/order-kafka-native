@@ -21,7 +21,9 @@ public class OrderService {
     private final KafkaProducer<String, String> kafkaProducer;
 
     public String createOrder(OrderRequest request) {
-        String orderId = UUID.randomUUID().toString();
+        String orderId = request.orderId() != null
+            ? request.orderId()
+            : UUID.randomUUID().toString();
 
         var orderEvent = OrderEvent.create(orderId, request.productName(), request.quantity());
 

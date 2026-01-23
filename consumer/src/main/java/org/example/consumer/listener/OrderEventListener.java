@@ -51,7 +51,15 @@ public class OrderEventListener {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
                 for (ConsumerRecord<String, String> record : records) {
-                    handleOrderEvent(record);
+                    try {
+                        handleOrderEvent(record);
+                    } catch (Exception e) {
+                        // 에러 발생 시에도 자동 커밋 때문에 offset이 커밋됨
+                        // → 메시지가 유실됨 (재처리 불가)
+                        log.error("❌ 메시지 처리 실패 - Partition: {}, Offset: {} | {}",
+                                  record.partition(), record.offset(), e.getMessage());
+                        log.warn("⚠️  [자동 커밋] 이 메시지는 이미 커밋되었으므로 재처리 불가능!");
+                    }
                 }
             }
         } catch (WakeupException e) {
@@ -70,7 +78,7 @@ public class OrderEventListener {
      *
      * @param record Kafka 메시지 레코드 (메타데이터 + 실제 값)
      */
-    private void handleOrderEvent(ConsumerRecord<String, String> record) {
+    private void handleOrderEvent(ConsumerRecord<String, String> record) throws Exception {
         OrderEvent event = JsonUtils.toObject(record.value(), OrderEvent.class);
 
         if (event == null) {
@@ -92,7 +100,7 @@ public class OrderEventListener {
         log.info("📦 주문시간: {}", DateUtils.formatDateTime(event.createdAt()));
         log.info("========================================");
 
-        // 비즈니스 로직 처리
+        // 비즈니스 로직 처리 (예외 발생 가능)
         orderProcessingService.processOrder(event);
     }
 
