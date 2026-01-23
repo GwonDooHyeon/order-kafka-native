@@ -17,6 +17,7 @@ public final class JsonUtils {
         .addModule(new JavaTimeModule())
         .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) // ISO 8601 문자열
         .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false) // JSON에 없는 필드가 있어도 무시하고 진행
         .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
         .build();
 
