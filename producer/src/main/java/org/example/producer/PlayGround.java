@@ -21,7 +21,11 @@ public class PlayGround {
         props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.setProperty(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "31000");
+//        props.setProperty(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "31000");
+
+//        props.setProperty(ProducerConfig.ACKS_CONFIG, "1");
+//        props.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        props.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "6");
 
         KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(props);
 
