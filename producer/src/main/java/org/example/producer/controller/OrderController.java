@@ -31,12 +31,7 @@ public class OrderController {
      * -H "Content-Type: application/json" \
      * -d '{"productName":"맥북 프로","quantity":1}'
      *
-     * 사용법 2 (custom orderId - 테스트용):
-     * curl -X POST http://localhost:8080/api/orders \
-     * -H "Content-Type: application/json" \
-     * -d '{"productName":"스마트폰","quantity":1,"orderId":"DB_FAIL_001"}'
-     *
-     * @param request 주문 요청 정보 (orderId 선택사항)
+     * @param request 주문 요청 정보
      * @return 주문 결과 메시지
      */
     @PostMapping
