@@ -1,4 +1,36 @@
 server.port: 0
 
 spring:
+  profiles.active: local
   application.name: consumer
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orderdb
+    username: order
+    password: order1234
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: off
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        jdbc:
+          time_zone: UTC
+          batch_size: 50
+
+---
+spring:
+  config.activate.on-profile: local
+  jpa:
+    generate-ddl: true
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+      schema-locations: classpath:/db/schema.sql

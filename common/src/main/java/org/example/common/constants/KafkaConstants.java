@@ -10,7 +10,5 @@ public class KafkaConstants {
 
     // Consumer 설정
     public final String DEFAULT_GROUP_ID = "order-consumer-group";
-    public final String AUTO_OFFSET_RESET_EARLIEST = "earliest";
-    public final String AUTO_OFFSET_RESET_LATEST = "latest";
 
 }

@@ -26,8 +26,7 @@ public class OrderController {
     /**
      * 주문 생성
      *
-     * 사용법 1 (자동 orderId 생성):
-     * curl -X POST http://localhost:8080/api/orders \
+     * curl -X POST http://localhost:9000/api/orders \
      * -H "Content-Type: application/json" \
      * -d '{"productName":"맥북 프로","quantity":1}'
      *
