@@ -5,50 +5,14 @@ Spring Kafka 대신 **Apache Kafka Client를 직접 사용**하여 Producer/Cons
 
 ---
 
-## 데이터 흐름 (단건 주문)
+## 기술 스택
 
-```
-[Client]                        [Producer :9000]                    [Kafka Broker :9092]                     [Consumer]                    [PostgreSQL]
-   │                                  │                                    │                                     │                              │
-   │  POST /api/orders                │                                    │                                     │                              │
-   │  {"productName","quantity"}       │                                    │                                     │                              │
-   │─────────────────────────────────▶│                                    │                                     │                              │
-   │                                  │                                    │                                     │                              │
-   │                        OrderController                                │                                     │                              │
-   │                          → OrderService.createOrder()                 │                                     │                              │
-   │                          → OrderEvent.create(id, name, qty)           │                                     │                              │
-   │                          → JsonUtils.toJson(event)                    │                                     │                              │
-   │                                  │                                    │                                     │                              │
-   │                                  │  KafkaProducer.send()              │                                     │                              │
-   │                                  │  topic: "order-created"            │                                     │                              │
-   │                                  │  key: orderId                      │                                     │                              │
-   │                                  │  value: JSON                       │                                     │                              │
-   │                                  │───────────────────────────────────▶│                                     │                              │
-   │                                  │                                    │                                     │                              │
-   │                                  │                                    │  파티션 로그 파일에 append            │                              │
-   │                                  │                                    │  (order-created-0/*.log)             │                              │
-   │                                  │                                    │                                     │                              │
-   │                                  │                          ack 반환  │                                     │                              │
-   │                                  │◀───────────────────────────────────│                                     │                              │
-   │                                  │                                    │                                     │                              │
-   │◀─ {"orderId", "message"} ────────│                                    │  ◀── KafkaConsumer.poll() ──────────│  while(true) 루프             │
-   │                                  │                                    │      (1초 간격 폴링)                 │                              │
-   │                                  │                                    │                                     │                              │
-   │                                  │                                    │  ConsumerRecords 반환 ─────────────▶│                              │
-   │                                  │                                    │  (마지막 커밋 offset 이후 레코드)     │                              │
-   │                                  │                                    │                                     │                              │
-   │                                  │                                    │                           JsonUtils.toObject(json, OrderEvent.class)│
-   │                                  │                                    │                           OrderProcessingService.processOrder()     │
-   │                                  │                                    │                                     │                              │
-   │                                  │                                    │                                     │  OrderRepository.save()      │
-   │                                  │                                    │                                     │─────────────────────────────▶│
-   │                                  │                                    │                                     │                              │
-   │                                  │                                    │                                     │  INSERT INTO orders          │
-   │                                  │                                    │                                     │◀─────────────────────────────│
-   │                                  │                                    │                                     │                              │
-   │                                  │                                    │  auto-commit offset ────────────────│                              │
-   │                                  │                                    │◀────────────────────────────────────│                              │
-```
+- Java 21
+- Spring Boot 3.5.9
+- Apache Kafka Client (Native)
+- PostgreSQL 17 + Spring Data JPA
+- Gradle (Multi-module)
+- Lombok / Jackson
 
 ---
 
@@ -97,6 +61,41 @@ order-native-kafka/
 │
 └── docker/
     └── docker-compose.yml               # PostgreSQL
+```
+
+---
+
+## Producer 모듈 (`:9000`)
+
+REST API로 주문을 받아 Kafka 토픽에 메시지를 발행합니다.
+
+```mermaid
+flowchart TD
+    A["POST /api/orders\n{productName, quantity}"] --> B[OrderController]
+    B --> C[OrderService.createOrder]
+    C --> D["orderId 생성 (UUID)"]
+    D --> E["OrderEvent.create(orderId, productName, quantity)"]
+    E --> F["JsonUtils.toJson(event)"]
+    F --> G["KafkaProducer.send()\ntopic: order-created\nkey: orderId\nvalue: JSON"]
+    G --> H["Broker: 파티션 로그 파일에 append\n(order-created-0/*.log)"]
+    H --> I["Broker → Producer ack 반환\n콜백에서 partition, offset 로그 출력"]
+```
+
+## Consumer 모듈
+
+Kafka 토픽을 폴링하여 메시지를 수신하고 PostgreSQL에 저장합니다.
+
+```mermaid
+flowchart TD
+    A["앱 시작 (@PostConstruct)"] --> B["KafkaConsumer.subscribe\n(order-created)"]
+    B --> C["while(running) 무한 루프\n(별도 스레드)"]
+    C --> D["KafkaConsumer.poll(1초)\nBroker에게 마지막 커밋 offset 이후 레코드 요청"]
+    D --> E{"레코드 존재?"}
+    E -- "없음 (0건)" --> C
+    E -- "있음 (1~N건)" --> F["handleOrderEvent(record)\nJsonUtils.toObject → OrderEvent 역직렬화\n메타데이터 로그 출력 (토픽, 파티션, 오프셋)"]
+    F --> G["OrderProcessingService.processOrder\nOrderEntity.from(event) → JPA 엔티티 변환\nOrderRepository.save() → INSERT INTO orders"]
+    G --> H["auto-commit으로 offset 커밋\n다음 poll()에서는 그 이후 메시지부터 수신"]
+    H --> C
 ```
 
 ---
@@ -174,17 +173,6 @@ kafka-logs/order-created-0/
 ├── leader-epoch-checkpoint          # 리더 에포크 정보
 └── partition.metadata               # 파티션 메타데이터
 ```
-
----
-
-## 기술 스택
-
-- Java 21
-- Spring Boot 3.5.9
-- Apache Kafka Client (Native)
-- PostgreSQL 17 + Spring Data JPA
-- Gradle (Multi-module)
-- Lombok / Jackson
 
 ---
 

@@ -35,8 +35,8 @@ public class OrderService {
      * 메시지 발행
      */
     private void sendOrderEvent(String key, OrderEvent event) {
-        String json = JsonUtils.toJson(event);
-        ProducerRecord<String, String> record = new ProducerRecord<>(OrderTopic.ORDER_CREATED, key, json);
+        String orderEvent = JsonUtils.toJson(event);
+        ProducerRecord<String, String> record = new ProducerRecord<>(OrderTopic.ORDER_CREATED, key, orderEvent);
 
         kafkaProducer.send(record, (metadata, ex) -> {
             if (ex == null) {

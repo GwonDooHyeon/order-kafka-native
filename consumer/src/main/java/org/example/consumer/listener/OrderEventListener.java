@@ -57,7 +57,7 @@ public class OrderEventListener {
                         handleOrderEvent(record);
                     } catch (Exception e) {
                         // 에러 발생 시에도 자동 커밋 때문에 offset이 커밋됨
-                        // → 메시지가 유실됨 (재처리 불가)
+                        // -> 메시지가 유실됨 (재처리 불가)
                         log.error("❌ 메시지 처리 실패 - Partition: {}, Offset: {} | {}",
                                   record.partition(), record.offset(), e.getMessage());
                         log.warn("⚠️  [자동 커밋] 이 메시지는 이미 커밋되었으므로 재처리 불가능!");
