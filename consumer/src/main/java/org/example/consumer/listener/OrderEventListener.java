@@ -1,7 +1,7 @@
 package org.example.consumer.listener;
 
 import java.time.Duration;
-import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -31,16 +31,18 @@ import jakarta.annotation.PreDestroy;
 @RequiredArgsConstructor
 public class OrderEventListener {
 
+    private static final List<String> TOPICS = List.of(OrderTopic.ORDER_CREATED);
+
+    private volatile boolean running = true;
+
     private final KafkaConsumer<String, String> consumer;
     private final OrderProcessingService orderProcessingService;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    private volatile boolean running = true;
-
     @PostConstruct
     public void startPolling() {
-        consumer.subscribe(Collections.singletonList(OrderTopic.ORDER_CREATED));
-        log.info("🎧 Kafka Consumer 시작 - 토픽: {}", OrderTopic.ORDER_CREATED);
+        consumer.subscribe(TOPICS);
+        log.info("🎧 Kafka Consumer 시작 - 토픽: {}", TOPICS);
 
         executorService.submit(this::pollLoop);
     }
@@ -78,7 +80,7 @@ public class OrderEventListener {
      *
      * @param record Kafka 메시지 레코드 (메타데이터 + 실제 값)
      */
-    private void handleOrderEvent(ConsumerRecord<String, String> record) throws Exception {
+    private void handleOrderEvent(ConsumerRecord<String, String> record) {
         OrderEvent event = JsonUtils.toObject(record.value(), OrderEvent.class);
 
         if (event == null) {
